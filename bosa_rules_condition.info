@@ -1,0 +1,4 @@
+name = BOSA rules condition
+core = 7.x
+package = BOSA
+features[features_api][] = api:1

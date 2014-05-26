@@ -1,0 +1,63 @@
+<?php
+/**
+ * @file
+ * bosa_rules_condition.module
+ */
+/**
+ * Implements hook_rules_condition_info().
+ */
+function bosa_rules_condition_rules_condition_info() {
+  $conditions = array();
+
+  $conditions['bosa_rules_condition_allow_free_ticket'] = array(
+    'label' => t('BOSA Order allows free tickets payment'),
+    'parameter' => array(
+      'commerce_order' => array(
+        'type' => 'commerce_order',
+        'label' => t('Order'),
+        'description' => t('The order whose line items should be checked for the specified product. If the specified order does not exist, the comparison will act as if it is against a quantity of 0.'),
+      ),
+    ),
+    'group' => t('BOSA'),
+    'callbacks' => array(
+      'execute' => 'bosa_rules_condition_allow_free_ticket',
+    ),
+  );
+
+  return $conditions;
+}
+
+
+/**
+ * Check if the checkout form filled out allows free tickets payment.
+ */
+function bosa_rules_condition_allow_free_ticket($order){
+  global $user;
+  $sql = "SELECT cp.uid, cp.product_id
+          FROM  `commerce_line_item` cli,  `commerce_product` cp
+          WHERE cli.order_id = :id
+          AND cli.line_item_label = cp.sku";
+  $line_items = db_query($sql, array(':id' =>  $order->order_id))->fetchAll();
+  // Run through the lineitems, and check if user is allowed to sell the tickets by owner.
+  // filled out that free ticekts payment.
+  $user_ids = array();
+  foreach($line_items as $row){
+    if($row->uid != $user->uid){
+      $owner = user_load($row->uid);
+      if($my_sales_users = field_get_items('user', $owner, 'field_my_sales_users')) {
+        foreach ($my_sales_users as $my_sales_user) {
+          $user_ids[] = $my_sales_user['target_id'];
+        }
+      }
+      // Return False if there are none sales users under owner.
+      else {
+        return FALSE;
+      }
+      // Return False if the user is not on the list.
+      if (count($user_ids) != 0 &&!in_array($user->uid, $user_ids)) {
+        return FALSE;
+      }
+    }
+  }
+  return TRUE;
+}
