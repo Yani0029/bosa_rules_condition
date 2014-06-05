@@ -43,13 +43,13 @@ function bosa_rules_condition_allow_free_ticket($order){
   $user_ids = array();
   foreach($line_items as $row){
     if($row->uid != $user->uid){
-      $owner = user_load($row->uid);
-      if($my_sales_users = field_get_items('user', $owner, 'field_my_sales_users')) {
-        foreach ($my_sales_users as $my_sales_user) {
-          $user_ids[] = $my_sales_user['target_id'];
+      $product = commerce_product_load($row->product_id);
+      if($other_sellers = field_get_items('commerce_product', $product, 'field_other_sellers')) {
+        foreach ($other_sellers as $seller) {
+          $user_ids[] = $seller['target_id'];
         }
       }
-      // Return False if there are none sales users under owner.
+      // Return False if there are none sales users under product.
       else {
         return FALSE;
       }
