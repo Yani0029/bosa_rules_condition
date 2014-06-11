@@ -44,7 +44,7 @@ function bosa_rules_condition_allow_free_ticket($order){
   foreach($line_items as $row){
     if($row->uid != $user->uid){
       $product = commerce_product_load($row->product_id);
-      if($other_sellers = field_get_items('commerce_product', $product, 'field_other_sellers')) {
+      if($other_sellers = field_get_items('commerce_product', $product, 'field_my_sales_users')) {
         foreach ($other_sellers as $seller) {
           $user_ids[] = $seller['target_id'];
         }
